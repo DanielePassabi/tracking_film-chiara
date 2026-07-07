@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Polpetta TV Diary">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="56" x2="56" y2="8" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fb7185"/>
+      <stop offset="0.48" stop-color="#a855f7"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="16" y1="10" x2="48" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff7ff" stop-opacity="0.88"/>
+      <stop offset="1" stop-color="#fff7ff" stop-opacity="0.12"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="#16091f"/>
+  <rect x="5" y="5" width="54" height="54" rx="13" fill="url(#bg)"/>
+  <path d="M17 49V15h17.2c8.3 0 13.8 4.9 13.8 12.2 0 7.5-5.6 12.5-14.1 12.5h-6.2V49H17Zm10.7-17.7h5.2c3.1 0 4.8-1.5 4.8-4.1 0-2.5-1.7-4-4.8-4h-5.2v8.1Z" fill="#fff7ff"/>
+  <path d="M12 12c10 5 24 4 40-2" stroke="url(#shine)" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+</svg>

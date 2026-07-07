@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Polpetta TV Diary</title>
+    <meta
+      name="description"
+      content="Una memoria interattiva delle serie viste da Polpetta: timeline, classifiche, comfort show, poster e piccoli ritorni speciali."
+    />
+    <meta name="application-name" content="Polpetta TV Diary" />
+    <meta name="theme-color" content="#a855f7" />
+    <meta name="color-scheme" content="dark" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Polpetta TV Diary" />
+    <meta property="og:title" content="Polpetta TV Diary" />
+    <meta
+      property="og:description"
+      content="Una visualizzazione affettuosa delle serie viste da Polpetta, fra timeline, poster e comfort show."
+    />
+    <meta property="og:image" content="./assets/share-preview.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="it_IT" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Polpetta TV Diary" />
+    <meta
+      name="twitter:description"
+      content="Timeline, classifiche e libreria poster delle serie viste da Polpetta."
+    />
+    <meta name="twitter:image" content="./assets/share-preview.png" />
+
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png" />
+    <link rel="manifest" href="./site.webmanifest" />
+    <link rel="preconnect" href="https://unpkg.com" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Polpetta TV Diary",
+        "description": "Una memoria interattiva delle serie viste da Polpetta.",
+        "inLanguage": "it-IT"
+      }
+    </script>
+  </head>
+  <body>
+    <header class="app-hero">
+      <img class="hero-image" src="./assets/polpetta-hero.png" alt="" />
+      <div class="hero-shade"></div>
+      <nav class="topbar" aria-label="Sezioni">
+        <a href="#timeline">Timeline</a>
+        <a href="#classifiche">Classifiche</a>
+        <a href="#libreria">Libreria</a>
+      </nav>
+      <section class="hero-content" aria-labelledby="page-title">
+        <p class="eyebrow">TV Time export</p>
+        <h1 id="page-title">Polpetta TV Diary</h1>
+        <p class="lede">
+          Una memoria interattiva delle serie viste, fra maratone, comfort show e ritorni speciali.
+        </p>
+        <div class="hero-actions">
+          <a class="primary-action" href="#libreria">
+            <i data-lucide="search"></i>
+            Esplora
+          </a>
+          <a class="ghost-action" href="#timeline">
+            <i data-lucide="bar-chart-3"></i>
+            Timeline
+          </a>
+        </div>
+      </section>
+    </header>
+
+    <main>
+      <section class="summary-band" aria-label="Statistiche principali">
+        <div class="summary-grid" id="summaryGrid"></div>
+      </section>
+
+      <section class="section-shell split-section" id="timeline">
+        <div class="section-heading">
+          <p class="eyebrow">Timeline</p>
+          <h2>Anni, picchi e import storici</h2>
+        </div>
+        <div class="timeline-layout">
+          <div class="panel">
+            <div class="panel-title-row">
+              <h3>Attivita per anno</h3>
+              <span class="pill">archivio separato</span>
+            </div>
+            <div class="year-chart" id="yearChart"></div>
+          </div>
+          <div class="panel accent-panel">
+            <h3>Nota sui batch</h3>
+            <p>
+              Aprile 2018 sembra un recupero massivo di cose viste prima: resta raccontato qui, ma non falsifica i grafici principali.
+            </p>
+            <div class="batch-stat">
+              <strong id="importRecords">3.148</strong>
+              <span>record nell'archivio del passato</span>
+              <small><span id="archiveTopSeries">serie recuperate</span> in cima a quel blocco</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-shell" id="classifiche">
+        <div class="section-heading">
+          <p class="eyebrow">Classifiche</p>
+          <h2>Le serie che hanno lasciato piu traccia</h2>
+        </div>
+        <div class="rank-grid">
+          <div class="panel">
+            <h3>Top episodi</h3>
+            <div id="episodeRank"></div>
+          </div>
+          <div class="panel">
+            <h3>Top ore</h3>
+            <div id="hourRank"></div>
+          </div>
+          <div class="panel">
+            <h3>Mesi piu intensi</h3>
+            <div id="monthRank"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="spotlight-band">
+        <div class="spotlight-copy">
+          <p class="eyebrow">Capsula ricordo</p>
+          <h2>Gossip Girl e gli episodi rivisti</h2>
+          <p>
+            A quanto pare, nell'universo di Polpetta l'Upper East Side non si visita una volta sola: ci si torna, episodio dopo episodio.
+          </p>
+        </div>
+        <div class="spotlight-number">
+          <strong id="rewatchCount">121</strong>
+          <span>episodi marcati come rivisti</span>
+        </div>
+      </section>
+
+      <section class="section-shell" id="libreria">
+        <div class="section-heading library-heading">
+          <div>
+            <p class="eyebrow">Libreria</p>
+            <h2>Tutte le serie</h2>
+          </div>
+          <div class="toolbar" role="search">
+            <label class="search-box">
+              <i data-lucide="search"></i>
+              <input id="searchInput" type="search" placeholder="Cerca una serie" autocomplete="off" />
+            </label>
+            <div class="segmented" aria-label="Ordina serie">
+              <button class="active" data-sort="episodes">Episodi</button>
+              <button data-sort="hours">Ore</button>
+              <button data-sort="recent">Recenti</button>
+              <button data-sort="rewatch">Rivisti</button>
+            </div>
+          </div>
+        </div>
+        <div class="series-grid" id="seriesGrid"></div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Polpetta TV Diary</span>
+      <span>Dati TV Time puliti. Poster locali da TVMaze, con fallback per match mancanti.</span>
+    </footer>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
