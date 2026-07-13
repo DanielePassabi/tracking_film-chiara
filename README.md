@@ -53,6 +53,12 @@ Scarica o aggiorna i poster locali da TVMaze:
 python .\scripts\fetch_show_posters.py
 ```
 
+Scarica o aggiorna i poster locali dei film:
+
+```powershell
+python .\scripts\fetch_movie_posters.py
+```
+
 Rigenera icone e immagine social preview:
 
 ```powershell

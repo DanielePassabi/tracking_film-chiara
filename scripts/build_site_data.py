@@ -74,11 +74,21 @@ def month_label(key: str) -> str:
     return f"{names[int(month) - 1]} {year}"
 
 
+def valid_release_dt(value: str) -> datetime | None:
+    dt = parse_dt(value)
+    if dt is None or dt.year <= 1900:
+        return None
+    return dt
+
+
 def build() -> dict[str, Any]:
     tracking = read_csv("tracking-prod-records-v2.csv")
+    movie_tracking = read_csv("tracking-prod-records.csv")
     user_show_data = read_csv("user_tv_show_data.csv")
     followed = read_csv("followed_tv_show.csv")
     rewatched = read_csv("rewatched_episode.csv")
+    movie_ratings = read_csv("ratings-live-votes.csv") + read_csv("ratings-v2-prod-votes.csv")
+    movie_emotions = read_csv("emotions-live-votes.csv")
 
     series: dict[str, dict[str, Any]] = {}
     months: dict[str, dict[str, Any]] = defaultdict(
@@ -262,6 +272,192 @@ def build() -> dict[str, Any]:
             }
         )
 
+    movies: dict[str, dict[str, Any]] = {}
+    movie_months: dict[str, dict[str, Any]] = defaultdict(
+        lambda: {
+            "key": "",
+            "label": "",
+            "records": 0,
+            "runtimeSeconds": 0,
+            "movies": Counter(),
+        }
+    )
+    movie_years: dict[str, dict[str, Any]] = defaultdict(
+        lambda: {
+            "year": "",
+            "records": 0,
+            "runtimeSeconds": 0,
+        }
+    )
+
+    def movie_entry(name: str) -> dict[str, Any]:
+        return movies.setdefault(
+            name,
+            {
+                "name": name,
+                "trackingRecords": 0,
+                "watchRecords": 0,
+                "followRecords": 0,
+                "watchlistRecords": 0,
+                "runtimeSeconds": 0,
+                "runtimeHours": 0,
+                "firstTracked": None,
+                "lastTracked": None,
+                "firstWatched": None,
+                "lastWatched": None,
+                "releaseDate": None,
+                "releaseYear": None,
+                "watched": False,
+                "followed": False,
+                "watchlist": False,
+                "rewatchCount": 0,
+                "ratingVotes": 0,
+                "emotionVotes": 0,
+                "topMonth": None,
+            },
+        )
+
+    first_movie_watch: datetime | None = None
+    last_movie_watch: datetime | None = None
+    movie_records = 0
+    movie_watch_records = 0
+    movie_follow_records = 0
+    movie_watchlist_records = 0
+
+    for row in movie_tracking:
+        if row.get("entity_type") != "movie" and not row.get("movie_name"):
+            continue
+        name = row.get("movie_name", "")
+        if not name:
+            continue
+
+        action = row.get("type", "")
+        dt = parse_dt(row.get("created_at", ""))
+        release_dt = valid_release_dt(row.get("release_date", ""))
+        runtime = as_int(row.get("runtime", ""))
+        entry = movie_entry(name)
+
+        movie_records += 1
+        entry["trackingRecords"] += 1
+        if runtime:
+            entry["runtimeSeconds"] = max(entry["runtimeSeconds"], runtime)
+        if release_dt and not entry["releaseDate"]:
+            entry["releaseDate"] = release_dt.date().isoformat()
+            entry["releaseYear"] = release_dt.year
+
+        if dt:
+            existing_first = parse_dt(entry["firstTracked"] or "")
+            existing_last = parse_dt(entry["lastTracked"] or "")
+            if existing_first is None or dt < existing_first:
+                entry["firstTracked"] = dt.isoformat(sep=" ")
+            if existing_last is None or dt > existing_last:
+                entry["lastTracked"] = dt.isoformat(sep=" ")
+
+        if action == "watch":
+            movie_watch_records += 1
+            entry["watchRecords"] += 1
+            entry["watched"] = True
+            entry["rewatchCount"] = max(entry["rewatchCount"], as_int(row.get("rewatch_count", "")))
+            if dt:
+                if first_movie_watch is None or dt < first_movie_watch:
+                    first_movie_watch = dt
+                if last_movie_watch is None or dt > last_movie_watch:
+                    last_movie_watch = dt
+
+                existing_first = parse_dt(entry["firstWatched"] or "")
+                existing_last = parse_dt(entry["lastWatched"] or "")
+                if existing_first is None or dt < existing_first:
+                    entry["firstWatched"] = dt.isoformat(sep=" ")
+                if existing_last is None or dt > existing_last:
+                    entry["lastWatched"] = dt.isoformat(sep=" ")
+
+                key = month_key(dt)
+                movie_months[key]["key"] = key
+                movie_months[key]["label"] = month_label(key)
+                movie_months[key]["records"] += 1
+                movie_months[key]["runtimeSeconds"] += runtime
+                movie_months[key]["movies"][name] += 1
+
+                year = str(dt.year)
+                movie_years[year]["year"] = year
+                movie_years[year]["records"] += 1
+                movie_years[year]["runtimeSeconds"] += runtime
+        elif action == "follow":
+            movie_follow_records += 1
+            entry["followRecords"] += 1
+            entry["followed"] = True
+        elif action == "towatch":
+            movie_watchlist_records += 1
+            entry["watchlistRecords"] += 1
+            entry["watchlist"] = True
+
+    rating_counter = Counter(row.get("movie_name", "") for row in movie_ratings if row.get("movie_name"))
+    for name, count in rating_counter.items():
+        movie_entry(name)["ratingVotes"] = count
+
+    emotion_counter = Counter(row.get("movie_name", "") for row in movie_emotions if row.get("movie_name"))
+    for name, count in emotion_counter.items():
+        movie_entry(name)["emotionVotes"] = count
+
+    movie_month_list = []
+    for item in sorted(movie_months.values(), key=lambda value: value["key"]):
+        top_movies = item["movies"].most_common(1)
+        movie_month_list.append(
+            {
+                "key": item["key"],
+                "label": item["label"],
+                "records": item["records"],
+                "runtimeHours": round(item["runtimeSeconds"] / 3600, 1),
+                "topMovie": top_movies[0][0] if top_movies else "",
+                "topMovieRecords": top_movies[0][1] if top_movies else 0,
+            }
+        )
+
+    movie_year_list = []
+    for item in sorted(movie_years.values(), key=lambda value: value["year"]):
+        movie_year_list.append(
+            {
+                "year": item["year"],
+                "records": item["records"],
+                "chartRecords": item["records"],
+                "bulkRecords": 0,
+                "runtimeHours": round(item["runtimeSeconds"] / 3600, 1),
+            }
+        )
+
+    release_decades = Counter()
+    for entry in movies.values():
+        entry["runtimeHours"] = round(entry["runtimeSeconds"] / 3600, 1)
+        del entry["runtimeSeconds"]
+        movie_specific_months = [
+            month
+            for month in movie_month_list
+            if month["topMovie"] == entry["name"]
+        ]
+        if movie_specific_months:
+            entry["topMonth"] = max(movie_specific_months, key=lambda value: value["records"])["label"]
+        if entry["watched"] and entry["releaseYear"]:
+            release_decades[f"{entry['releaseYear'] // 10 * 10}s"] += 1
+
+    movie_list = sorted(
+        movies.values(),
+        key=lambda item: (
+            item["watched"],
+            item["lastWatched"] or item["lastTracked"] or "",
+            item["runtimeHours"],
+        ),
+        reverse=True,
+    )
+    watched_movies = [item for item in movie_list if item["watched"]]
+    known_movie_runtime = sum(item["runtimeHours"] for item in watched_movies)
+    movie_release_decades = [
+        {
+            "label": decade,
+            "records": count,
+        }
+        for decade, count in sorted(release_decades.items(), key=lambda item: item[0])
+    ]
+
     return {
         "generatedAt": datetime.now().isoformat(timespec="seconds"),
         "title": "Polpetta TV Diary",
@@ -305,6 +501,31 @@ def build() -> dict[str, Any]:
         "years": year_list,
         "months": month_list,
         "series": series_list,
+        "movies": {
+            "stats": {
+                "trackingRecords": movie_records,
+                "movieCount": len(movie_list),
+                "watchedMovies": len(watched_movies),
+                "watchRecords": movie_watch_records,
+                "followedMovies": sum(1 for item in movie_list if item["followed"]),
+                "watchlistMovies": sum(1 for item in movie_list if item["watchlist"]),
+                "followRecords": movie_follow_records,
+                "watchlistRecords": movie_watchlist_records,
+                "runtimeHours": round(known_movie_runtime, 1),
+                "ratedMovies": len(rating_counter),
+                "emotionMovies": len(emotion_counter),
+                "firstSeen": first_movie_watch.isoformat(sep=" ") if first_movie_watch else None,
+                "lastSeen": last_movie_watch.isoformat(sep=" ") if last_movie_watch else None,
+            },
+            "top": {
+                "hours": sorted(watched_movies, key=lambda item: item["runtimeHours"], reverse=True)[:12],
+                "months": sorted(movie_month_list, key=lambda item: item["records"], reverse=True)[:12],
+                "releaseDecades": sorted(movie_release_decades, key=lambda item: item["records"], reverse=True),
+            },
+            "years": movie_year_list,
+            "months": movie_month_list,
+            "items": movie_list,
+        },
     }
 
 
@@ -317,6 +538,7 @@ def main() -> None:
     SITE_OUT.write_text(rendered, encoding="utf-8")
     print(f"Site data: {SITE_OUT}")
     print(f"Series: {data['stats']['seriesCount']}")
+    print(f"Movies: {data['movies']['stats']['movieCount']}")
     print(f"Records: {data['stats']['trackingRecords']}")
 
 
